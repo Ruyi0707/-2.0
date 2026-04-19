@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>RMS 恋爱匹配筛选系统</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#f4f1ec;color:#2c2c2c;line-height:1.6}
+.wrap{max-width:680px;margin:0 auto;padding:20px 16px 80px}
+
+/* --- Hero --- */
+.hero{background:#fff;border-radius:20px;padding:32px 28px;box-shadow:0 4px 20px rgba(0,0,0,.06);margin-bottom:20px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:1px;margin-bottom:8px}
+.hero p{font-size:14px;color:#666;margin-bottom:16px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.tag{padding:5px 14px;border-radius:99px;background:#f4f1ec;font-size:12px;color:#666;font-weight:500}
+.btn{display:inline-block;padding:14px 32px;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
+.btn-main{background:#2c2c2c;color:#fff}
+.btn-main:hover{background:#444}
+.btn-sec{background:#f4f1ec;color:#2c2c2c}
+.btn-sec:hover{background:#e8e4dd}
+
+/* --- Progress --- */
+.progress-bar-wrap{position:sticky;top:0;z-index:100;background:#f4f1ec;padding:12px 0;display:none}
+.progress-inner{background:#fff;border-radius:14px;padding:12px 18px;box-shadow:0 2px 12px rgba(0,0,0,.06);display:flex;align-items:center;gap:14px}
+.progress-track{flex:1;height:8px;background:#eee;border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#bbb,#2c2c2c);border-radius:99px;transition:width .3s}
+.progress-text{font-size:13px;color:#999;font-weight:600;white-space:nowrap}
+
+/* --- Section --- */
+.section{display:none;background:#fff;border-radius:20px;padding:28px 24px;box-shadow:0 4px 20px rgba(0,0,0,.06);margin-bottom:16px}
+.section.active{display:block}
+.section-head{margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #f0ece6}
+.section-head h2{font-size:20px;font-weight:700;margin-bottom:4px}
+.section-head p{font-size:13px;color:#999}
+
+/* --- Question --- */
+.question{padding:20px 0;border-bottom:1px solid #f8f6f2}
+.question:last-of-type{border-bottom:none}
+.q-num{font-size:12px;color:#bbb;font-weight:700;margin-bottom:6px}
+.q-text{font-size:15px;font-weight:600;line-height:1.7;margin-bottom:14px;color:#2c2c2c}
+
+/* --- Circle Selector (MBTI style) --- */
+.circles{display:flex;align-items:center;justify-content:center;gap:0;padding:0 8px}
+.circles .side-label{font-size:11px;color:#aaa;font-weight:600;min-width:48px;text-align:center}
+.circles .side-label.left{text-align:right;padding-right:10px}
+.circles .side-label.right{text-align:left;padding-left:10px}
+.circle-group{display:flex;align-items:center;gap:10px}
+.circle-opt{position:relative;cursor:pointer}
+.circle-opt input{position:absolute;opacity:0;pointer-events:none}
+.circle-opt .dot{display:block;border-radius:50%;border:2px solid #ddd;background:#fff;transition:all .2s}
+.circle-opt .dot.s1{width:36px;height:36px}
+.circle-opt .dot.s2{width:28px;height:28px}
+.circle-opt .dot.s3{width:20px;height:20px}
+.circle-opt input:checked ~ .dot{background:#2c2c2c;border-color:#2c2c2c}
+.circle-opt:hover .dot{border-color:#999}
+
+/* --- Scenario --- */
+.scenario-wrap{margin-top:6px}
+.scenario-desc{font-size:14px;color:#2c2c2c;font-weight:600;line-height:1.7;margin-bottom:12px}
+.scenario-opts{display:flex;flex-direction:column;gap:8px}
+.scenario-opt{position:relative}
+.scenario-opt input{position:absolute;opacity:0;pointer-events:none}
+.scenario-opt label{display:block;padding:14px 16px;border:2px solid #eee;border-radius:14px;font-size:13px;line-height:1.6;color:#555;cursor:pointer;transition:.2s;background:#fafaf8}
+.scenario-opt input:checked + label{border-color:#2c2c2c;background:#f9f7f3;color:#2c2c2c;font-weight:600}
+.scenario-opt:hover label{border-color:#ccc}
+
+/* --- Open Question --- */
+.open-textarea{width:100%;min-height:120px;border:2px solid #eee;border-radius:14px;padding:14px 16px;font-size:14px;line-height:1.7;resize:vertical;background:#fafaf8;font-family:inherit;transition:.2s}
+.open-textarea:focus{outline:none;border-color:#2c2c2c}
+
+/* --- Nav --- */
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:12px}
+.nav-row .step-info{font-size:13px;color:#bbb}
+.error-msg{color:#c0392b;font-size:13px;display:none;margin-top:8px}
+
+/* --- Results --- */
+#resultSection{display:none}
+#resultSection.active{display:block}
+.result-card{background:#fff;border-radius:20px;padding:28px 24px;box-shadow:0 4px 20px rgba(0,0,0,.06);margin-bottom:16px}
+.type-badge{display:inline-block;font-size:32px;font-weight:900;letter-spacing:3px;padding:10px 20px;border-radius:16px;background:#f4f1ec;color:#2c2c2c;margin:10px 0 14px}
+.type-sub{font-size:16px;font-weight:700;color:#2c2c2c;margin-bottom:6px}
+.type-desc{font-size:14px;color:#777;line-height:1.7}
+.dim-scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:18px}
+.dim-card{padding:16px;border:1px solid #f0ece6;border-radius:14px;background:#fafaf8}
+.dim-card h4{font-size:14px;font-weight:700;margin-bottom:4px}
+.dim-card .score-val{font-size:13px;color:#888;margin-bottom:8px}
+.meter{height:8px;background:#eee;border-radius:99px;overflow:hidden}
+.meter span{display:block;height:100%;border-radius:99px;transition:width .4s}
+.risk-section{margin-top:18px}
+.risk-item{padding:12px 14px;border-radius:12px;margin-bottom:8px;border-left:4px solid #ddd;background:#fafaf8}
+.risk-item.low{border-left-color:#27ae60}
+.risk-item.mid{border-left-color:#e67e22}
+.risk-item.high{border-left-color:#c0392b}
+.risk-item strong{font-size:14px}
+.risk-item p{font-size:13px;color:#888;margin-top:4px}
+.cm-result{margin-top:18px;padding:16px;border:1px solid #f0ece6;border-radius:14px;background:#fafaf8}
+.report-box{margin-top:18px}
+.report-box textarea{width:100%;min-height:200px;border:1px solid #eee;border-radius:14px;padding:14px;font-size:13px;line-height:1.7;resize:vertical;background:#fafaf8;font-family:inherit}
+.actions-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+
+@media(max-width:600px){
+  .hero{padding:24px 18px}
+  .section{padding:22px 16px}
+  .circle-group{gap:6px}
+  .circles .side-label{min-width:36px;font-size:10px}
+  .circle-opt .dot.s1{width:32px;height:32px}
+  .circle-opt .dot.s2{width:24px;height:24px}
+  .circle-opt .dot.s3{width:18px;height:18px}
+  .dim-scores{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="progress-bar-wrap" id="progressWrap">
+    <div class="progress-inner">
+      <span class="progress-text" id="progressText">0 / 42</span>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+
+  <div id="introSection" class="active" style="display:block">
+    <div class="hero">
+      <h1>RMS 恋爱匹配筛选系统</h1>
+      <p>这是一套用于前筛和关系画像的测试。它不是心理诊断工具，不能替代真实相处，但可以帮助你更快识别自己的关系模式，以及两个人之间的结构性兼容度。</p>
+      <div class="tags">
+        <span class="tag">约 10-15 分钟</span>
+        <span class="tag">没有对错之分</span>
+        <span class="tag">请按真实倾向作答</span>
+        <span class="tag">结果仅供参考</span>
+      </div>
+      <p style="font-size:13px;color:#999;margin-bottom:18px">共 42 道量表题 + 4 道开放题。量表题从「非常符合」到「非常不符合」五档选择，开放题自由作答。</p>
+      <button class="btn btn-main" id="startBtn">开始测试</button>
+    </div>
+  </div>
+
+  <div id="questionsWrap"></div>
+  <div id="resultSection"></div>
+</div>
+
+<script>
+// ====== DATA ======
+const sections = [
+  {
+    id:'sec1', title:'第一部分', desc:'关于你的情绪和冲突处理方式',
+    questions:[
+      {id:1, text:'我难受的时候，基本能分清「是我情绪上来了」还是「事情本身真的很严重」。', dim:'ER', dir:'+'},
+      {id:2, text:'吵架的时候，哪怕很生气，我通常还是能控制自己说话的分寸，不太会说出让自己后悔的狠话。', dim:'ER', dir:'+'},
+      {id:3, text:'如果晚上因为什么事不开心了，第二天醒来我基本能恢复正常。', dim:'ER', dir:'+'},
+      // RF R1 embedded
+      {id:'R1', text:'我觉得在一段关系里，重要的事情最终还是应该由判断力更强的那个人拍板，两个人非要意见一致反而效率低。', dim:'RF', dir:'R'},
+      {id:4, text:'生气的事情过去之后，我还是会在心里反复回放，越想越气，很难放下。', dim:'ER', dir:'R'},
+      {id:5, text:'我有情绪的时候，还是能正常做该做的事，不太会整个人被情绪卡住、什么都不想干。', dim:'ER', dir:'+'},
+      {id:6, text:'吵完架之后，我通常是比较主动去缓和气氛的那个人，不太会一直等着对方先来找我。', dim:'CR', dir:'+'},
+      {id:7, text:'对方吵完架来跟我示好的时候，我一般能接住、顺着台阶下，不太会故意继续冷着。', dim:'CR', dir:'+'},
+      // RF R2 embedded
+      {id:'R2', text:'即使伴侣已经提前跟我说了要和异性朋友单独见面，我通常还是会想知道更多细节，不然心里很难接受。', dim:'RF', dir:'R'},
+      {id:8, text:'我不高兴的时候，会故意不回消息、不说话，让对方自己去猜我怎么了。', dim:'CR', dir:'R'},
+      {id:9, text:'吵架的时候，我基本能就事论事，不太会动不动扯到对方人品上或者翻旧账。', dim:'CR', dir:'+'},
+      {id:10, text:'如果确实是我的问题，我一般愿意先承认，不太会明知道自己不对还因为面子硬撑。', dim:'CR', dir:'+'},
+      // RF R3 embedded
+      {id:'R3', text:'如果伴侣的某个决定我不认可，我很难只提一次就算了，会忍不住反复提起。', dim:'RF', dir:'R'},
+    ]
+  },
+  {
+    id:'sec2', title:'第二部分', desc:'关于你对亲密关系的距离偏好',
+    questions:[
+      {id:11, text:'我比较喜欢和伴侣每天都有比较长的时间在一起，哪怕只是待在一个空间里各做各的。', dim:'IP', dir:'+'},
+      {id:12, text:'恋爱之后，我还是很需要保留固定的个人时间，不太喜欢两个人的时间完全融在一起。', dim:'IP', dir:'R'},
+      {id:13, text:'有重要的事情发生时，伴侣通常是我第一个想要告诉的人，比朋友和家人都优先。', dim:'IP', dir:'+'},
+      {id:14, text:'我有自己的爱好和朋友圈子，更喜欢各自保留自己的世界，不太需要伴侣都参与进来。', dim:'IP', dir:'R'},
+      {id:15, text:'我觉得伴侣之间最好的状态，是大部分时间都在一起，而不只是每天见一两个小时。', dim:'IP', dir:'+'},
+      {id:16, text:'如果伴侣每周有几个晚上去做自己的事情（朋友聚会、个人爱好），我觉得完全没问题。', dim:'IP', dir:'R'},
+      {id:17, text:'我理想的关系是两个人既亲密又各自有独立生活，伴侣不需要参与到我生活的方方面面。', dim:'IP', dir:'M'},
+    ]
+  },
+  {
+    id:'sec3', title:'第三部分', desc:'关于你对确认和回应的需求',
+    questions:[
+      {id:18, text:'对方回消息比平时慢很多的时候，我一般也不太会反复去看手机，该干嘛还是干嘛。', dim:'RN', dir:'+'},
+      {id:19, text:'对方一整天都没主动联系我的话，我比较容易忍不住往坏的方向想，很难一直跟自己说「TA 可能只是忙」。', dim:'RN', dir:'R'},
+      {id:20, text:'我不太需要对方经常说「我爱你」「我想你」这种话，TA 的行动能让我感受到就够了。', dim:'RN', dir:'+'},
+      {id:21, text:'对方跟别人聊得很开心的时候，我有时会不自觉地想「TA 是不是更喜欢跟那个人在一起」。', dim:'RN', dir:'R'},
+      {id:22, text:'关系中如果有一段时间感觉比较平淡了，我一般也觉得是正常的起伏，不太会慌张地觉得感情要出问题。', dim:'RN', dir:'+'},
+      {id:23, text:'对方的一句无心的话，我可能会在心里琢磨很久，越想越觉得不对劲。', dim:'RN', dir:'R'},
+      {id:24, text:'我的安全感更多来自于我对自己的信心，不太会因为对方今天态度冷了一点就开始不安。', dim:'RN', dir:'+'},
+    ]
+  },
+  {
+    id:'sec4', title:'第四部分', desc:'关于你在关系中的表达和回应方式',
+    questions:[
+      {id:25, text:'如果我喜欢一个人，对方一般都能比较明显地感觉到，不太会到最后才知道「原来你那时候喜欢我」。', dim:'RE', dir:'+'},
+      {id:26, text:'我心里很在意一个人，但经常被人说「完全看不出来你的感觉」。', dim:'RE', dir:'R'},
+      {id:27, text:'我比较愿意主动制造一些小惊喜或特别的时刻来表达在意，不太会觉得「心里知道就行了」。', dim:'RE', dir:'+'},
+      {id:28, text:'对方来找我聊天或倾诉的时候，我的回应通常比较简短，不太会展开来说很多。', dim:'RE', dir:'R'},
+      {id:29, text:'伴侣做了让我开心的事，我一般会直接说出来，比如「谢谢你，这让我很高兴」，不太会只是心里感动但嘴上没什么表示。', dim:'RE', dir:'+'},
+      {id:30, text:'我宁可默默对一个人好，也不太愿意把在意直接说出来。', dim:'RE', dir:'R'},
+      {id:31, text:'在关系刚开始的阶段，我比较愿意主动释放明确的信号让对方知道我感兴趣，不太会藏着掖着等对方来猜。', dim:'RE', dir:'+'},
+      {id:32, text:'我对在意的人的回应，一般是比较稳定持续的，不太会一阵很热、一阵又突然变冷，让对方摸不清我的状态。', dim:'RE', dir:'+'},
+      {id:33, text:'就算最近比较忙或者状态不太好，我通常也会让对方知道「我不是在疏远你，只是暂时顾不上」，不太会直接消失一阵子。', dim:'RE', dir:'+'},
+    ]
+  },
+  {
+    id:'sec5', title:'第五部分', desc:'关于你的思维和沟通风格',
+    questions:[
+      {id:'C1', text:'朋友跟我聊完烦心事、情绪缓和之后，比起继续陪 TA 聊感受，我更自然的反应是帮 TA 理清思路、想想下一步怎么办。', dim:'CM', dir:'+'},
+      {id:'C2', text:'做重要决定的时候，我觉得直觉告诉我的答案，和逻辑分析出来的结论一样值得信任。', dim:'CM', dir:'R'},
+      {id:'C3', text:'比起聊「这件事该怎么解决」，我更享受聊「这件事意味着什么」。', dim:'CM', dir:'R'},
+      {id:'C4', text:'在感情里遇到分歧，我觉得「道理上对不对」比「感觉上舒不舒服」更应该作为判断依据。', dim:'CM', dir:'+'},
+      {id:'S1', text:'你的伴侣因为工作上的事情心情不好，你已经安慰了 TA、也陪了一会儿。TA 情绪缓和之后，你接下来更自然的反应是——', dim:'CM', dir:'scenario',
+        optA:'开始和 TA 一起分析情况：「那个项目具体卡在哪了？要不我帮你理一理？」',
+        optB:'继续在感受层面聊：「你最近压力确实大……有没有想过这份工作到底值不值得？」'},
+      {id:'S2', text:'你和伴侣在计划一件重要的事（比如旅行或搬家）。你更自然的开始方式是——', dim:'CM', dir:'scenario',
+        optA:'先收集信息、对比选项、列出利弊',
+        optB:'先聊「我们想要什么感觉」「我们最看重的是什么」'},
+    ]
+  },
+  {
+    id:'sec6', title:'第六部分', desc:'开放题——用你自己的话自由回答，写多写少都可以',
+    questions:[
+      {id:'O1', text:'你理想中三到五年后的生活是什么样的？（可以聊工作、居住、节奏、家庭，随你展开）', dim:'OPEN', dir:'open'},
+      {id:'O2', text:'在一段亲密关系里，你最不能接受对方做的一件事是什么？为什么？', dim:'OPEN', dir:'open'},
+      {id:'O3', text:'如果你和伴侣在一个大事上意见完全相反（比如要不要小孩、去哪个城市生活），你会怎么处理？', dim:'OPEN', dir:'open'},
+      {id:'O4', text:'你觉得身体上的亲密（牵手、拥抱、亲密接触）在一段关系里有多重要？你理想的状态是什么样的？', dim:'OPEN', dir:'open'},
+    ]
+  }
+];
+
+const typeLabels = {
+  NSE:{name:'温暖主动型',desc:'想要亲近，内心稳定，表达充分。你在关系里给对方的体验通常是温暖和安全的，关系启动对你来说不太难。'},
+  NSR:{name:'沉稳深水型',desc:'想要亲近，内心稳定，但表达偏内敛。你的在意是真的，但对方可能需要时间才能感受到。'},
+  NAE:{name:'热烈表达型',desc:'想要亲近，需要确认，表达充分。你在关系里的温度很高，但也需要对方给你足够的回应。'},
+  NAR:{name:'渴望未达型',desc:'想要亲近，需要确认，但表达不出来。你的内心需求和外在表现之间存在明显落差。'},
+  ISE:{name:'清醒给予型',desc:'需要空间，内心稳定，表达清晰。你不会黏人，但会让对方感受得到你的在意。'},
+  ISR:{name:'独立自洽型',desc:'需要空间，内心稳定，表达内敛。你自给自足，但对方可能觉得距离感比较强。'},
+  IAE:{name:'矛盾信号型',desc:'需要空间，又需要确认，有表达。你可能会出现「想靠近又想退」的推拉状态。'},
+  IAR:{name:'封闭敏感型',desc:'需要空间，需要确认，表达不出来。你最容易被误解，也最容易在关系中感到消耗。'}
+};
+
+const dimMeta = {
+  ER:{name:'情绪调节',max:25,color:'#c026d3'},
+  CR:{name:'冲突修复',max:25,color:'#0891b2'},
+  IP:{name:'亲密距离',max:30,color:'#ea580c'},
+  RN:{name:'确认需求',max:35,color:'#2563eb'},
+  RE:{name:'回应表达',max:45,color:'#16a34a'},
+  CM:{name:'认知沟通',max:20,color:'#b45309'},
+  RF:{name:'安全筛查',max:15,color:'#dc2626'}
+};
+
+let currentSection = 0;
+const totalScaleQ = sections.reduce((s,sec) => s + sec.questions.filter(q=>q.dir!=='open').length, 0);
+
+function buildSections(){
+  const wrap = document.getElementById('questionsWrap');
+  let globalQNum = 0;
+
+  sections.forEach((sec, secIdx) => {
+    const el = document.createElement('div');
+    el.className = 'section';
+    el.id = sec.id;
+
+    let html = `<div class="section-head"><h2>${sec.title}</h2><p>${sec.desc}</p></div>`;
+
+    sec.questions.forEach(q => {
+      globalQNum++;
+      const qKey = `q_${q.id}`;
+
+      if(q.dir === 'open'){
+        html += `<div class="question">
+          <div class="q-num">Q${globalQNum}</div>
+          <div class="q-text">${q.text}</div>
+          <textarea class="open-textarea" name="${qKey}" placeholder="在这里写下你的想法……"></textarea>
+        </div>`;
+      } else if(q.dir === 'scenario'){
+        html += `<div class="question">
+          <div class="q-num">Q${globalQNum}</div>
+          <div class="scenario-wrap">
+            <div class="scenario-desc">${q.text}</div>
+            <div class="scenario-opts">
+              <div class="scenario-opt">
+                <input type="radio" name="${qKey}" id="${qKey}_A" value="A">
+                <label for="${qKey}_A">A. ${q.optA}</label>
+              </div>
+              <div class="scenario-opt">
+                <input type="radio" name="${qKey}" id="${qKey}_B" value="B">
+                <label for="${qKey}_B">B. ${q.optB}</label>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      } else {
+        html += `<div class="question">
+          <div class="q-num">Q${globalQNum}</div>
+          <div class="q-text">${q.text}</div>
+          <div class="circles">
+            <span class="side-label left">非常符合</span>
+            <div class="circle-group">
+              ${[5,4,3,2,1].map(v => {
+                const sz = v===5||v===1 ? 's1' : v===4||v===2 ? 's2' : 's3';
+                return `<label class="circle-opt"><input type="radio" name="${qKey}" value="${v}"><span class="dot ${sz}"></span></label>`;
+              }).join('')}
+            </div>
+            <span class="side-label right">非常不符合</span>
+          </div>
+        </div>`;
+      }
+    });
+
+    html += `<div class="error-msg" id="err_${secIdx}">还有题目没答完哦～</div>`;
+    html += `<div class="nav-row">
+      <span class="step-info">${secIdx+1} / ${sections.length}</span>
+      <div>
+        ${secIdx > 0 ? `<button class="btn btn-sec" onclick="goSection(${secIdx-1})">上一部分</button> ` : ''}
+        ${secIdx < sections.length-1 ? `<button class="btn btn-main" onclick="nextSection(${secIdx})">下一部分</button>` : `<button class="btn btn-main" onclick="submitAll()">查看结果</button>`}
+      </div>
+    </div>`;
+
+    el.innerHTML = html;
+    wrap.appendChild(el);
+  });
+}
+
+function goSection(idx){
+  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
+  document.getElementById(sections[idx].id).classList.add('active');
+  currentSection = idx;
+  window.scrollTo({top:0,behavior:'smooth'});
+  updateProgress();
+}
+
+function isSectionDone(idx){
+  const sec = sections[idx];
+  for(const q of sec.questions){
+    const qKey = `q_${q.id}`;
+    if(q.dir === 'open'){
+      const ta = document.querySelector(`textarea[name="${qKey}"]`);
+      if(!ta || !ta.value.trim()) return false;
+    } else {
+      const checked = document.querySelector(`input[name="${qKey}"]:checked`);
+      if(!checked) return false;
+    }
+  }
+  return true;
+}
+
+function nextSection(idx){
+  const err = document.getElementById(`err_${idx}`);
+  if(!isSectionDone(idx)){ err.style.display='block'; return; }
+  err.style.display='none';
+  goSection(idx+1);
+}
+
+function submitAll(){
+  const lastIdx = sections.length-1;
+  const err = document.getElementById(`err_${lastIdx}`);
+  if(!isSectionDone(lastIdx)){ err.style.display='block'; return; }
+  for(let i=0;i<sections.length;i++){
+    if(!isSectionDone(i)){ goSection(i); document.getElementById(`err_${i}`).style.display='block'; return; }
+  }
+  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
+  document.getElementById('progressWrap').style.display='none';
+  renderResults();
+}
+
+function updateProgress(){
+  let done = 0;
+  sections.forEach(sec => {
+    sec.questions.forEach(q => {
+      const qKey = `q_${q.id}`;
+      if(q.dir==='open'){
+        const ta = document.querySelector(`textarea[name="${qKey}"]`);
+        if(ta && ta.value.trim()) done++;
+      } else {
+        if(document.querySelector(`input[name="${qKey}"]:checked`)) done++;
+      }
+    });
+  });
+  const total = sections.reduce((s,sec)=>s+sec.questions.length,0);
+  const pct = (done/total)*100;
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressText').textContent = `${done} / ${total}`;
+}
+
+function getVal(qId){
+  const el = document.querySelector(`input[name="q_${qId}"]:checked`);
+  return el ? el.value : null;
+}
+
+function scoreQ(qId, dir){
+  const v = getVal(qId);
+  if(v===null) return 0;
+  if(dir==='scenario') return v==='A' ? 5 : 1;
+  const num = Number(v);
+  return dir==='R' ? (6-num) : num;
+}
+
+function renderResults(){
+  // Calculate scores
+  const scores = {ER:0,CR:0,IP:0,RN:0,RE:0,CM:0,RF:0};
+  const counts = {ER:0,CR:0,IP:0,RN:0,RE:0,CM:0,RF:0};
+
+  sections.forEach(sec => {
+    sec.questions.forEach(q => {
+      if(q.dir==='open' || q.dir==='M') return;
+      const s = scoreQ(q.id, q.dir);
+      if(scores[q.dim] !== undefined){
+        scores[q.dim] += s;
+        counts[q.dim]++;
+      }
+    });
+  });
+
+  // Anchor Q17 not scored into IP
+  const ipMax = counts.IP * 5;
+  const rnMax = counts.RN * 5;
+  const reMax = counts.RE * 5;
+  const erMax = counts.ER * 5;
+  const crMax = counts.CR * 5;
+  const cmMax = counts.CM * 5;
+
+  // Type coding (IP, RN, RE)
+  const ipMid = ipMax / 2;
+  const rnMid = rnMax / 2;
+  const reMid = reMax / 2;
+  const cmMid = cmMax / 2;
+
+  const codeIP = scores.IP >= ipMid ? 'N' : 'I';
+  const codeRN = scores.RN >= rnMid ? 'S' : 'A';
+  const codeRE = scores.RE >= reMid ? 'E' : 'R';
+  const codeCM = scores.CM >= cmMid ? 'T' : 'F';
+
+  const typeCode = `${codeIP}${codeRN}${codeRE}`;
+  const typeInfo = typeLabels[typeCode] || {name:'混合型',desc:'你的结果处于多个维度的中间区域。'};
+
+  // Baseline thresholds
+  const erPct = scores.ER / erMax * 100;
+  const crPct = scores.CR / crMax * 100;
+
+  // RF red flags
+  const rfScores = [];
+  ['R1','R2','R3'].forEach(rid => {
+    const v = getVal(rid);
+    if(v) rfScores.push(6 - Number(v)); // all R direction
+  });
+  const rfTotal = rfScores.reduce((a,b)=>a+b,0);
+  const rfMax = rfScores.length * 5;
+
+  // Risks
+  const risks = [];
+
+  // ER baseline
+  if(erPct < 50) risks.push({title:'情绪调节',level:'high',desc:'你的情绪调节能力可能是关系中的风险点。情绪来的时候较难控制行为反应，或者恢复时间较长。建议在关系中特别注意冲突时的沟通方式。'});
+  else if(erPct < 65) risks.push({title:'情绪调节',level:'mid',desc:'你的情绪调节能力整体中等。大部分时候能控制，但压力大或冲突激烈时可能会失控。'});
+  else risks.push({title:'情绪调节',level:'low',desc:'你的情绪调节能力较好，能够在情绪和理性之间保持平衡。'});
+
+  // CR baseline
+  if(crPct < 50) risks.push({title:'冲突修复',level:'high',desc:'冲突后的修复可能是你在关系中的短板。你可能倾向于冷处理、等对方先来、或者在冲突中升级。长期关系里这会是主要的消耗来源。'});
+  else if(crPct < 65) risks.push({title:'冲突修复',level:'mid',desc:'你的冲突修复能力整体中等。有修复意愿，但不一定每次都能很好地执行。'});
+  else risks.push({title:'冲突修复',level:'low',desc:'你在冲突后的修复能力较强，愿意主动缓和，也能接住对方的示好。'});
+
+  // RF
+  if(rfTotal >= rfMax * 0.7) risks.push({title:'控制倾向提示',level:'high',desc:'你的部分回答显示出较强的控制或占有倾向。这不一定是"问题"，但如果对方是一个重视个人空间和自主性的人，可能会产生比较大的摩擦。'});
+  else if(rfTotal >= rfMax * 0.5) risks.push({title:'控制倾向提示',level:'mid',desc:'你有一定的控制或边界意识，但整体在正常范围内。'});
+
+  // Dim display data
+  const dimDisplay = [
+    {key:'ER',name:'情绪调节',score:scores.ER,max:erMax,color:'#c026d3',high:'调节能力强',low:'调节能力弱'},
+    {key:'CR',name:'冲突修复',score:scores.CR,max:crMax,color:'#0891b2',high:'修复能力强',low:'修复能力弱'},
+    {key:'IP',name:'亲密距离',score:scores.IP,max:ipMax,color:'#ea580c',high:'偏亲近',low:'偏独立'},
+    {key:'RN',name:'确认需求',score:scores.RN,max:rnMax,color:'#2563eb',high:'安全感稳定',low:'确认需求较高'},
+    {key:'RE',name:'回应表达',score:scores.RE,max:reMax,color:'#16a34a',high:'表达充分',low:'表达内敛'},
+  ];
+
+  // Open answers
+  const openAnswers = [];
+  ['O1','O2','O3','O4'].forEach(oid => {
+    const ta = document.querySelector(`textarea[name="q_${oid}"]`);
+    if(ta) openAnswers.push({id:oid, val:ta.value.trim()});
+  });
+
+  // Build result HTML
+  const rs = document.getElementById('resultSection');
+  rs.innerHTML = `
+    <div class="result-card">
+      <h2>你的关系模式画像</h2>
+      <div class="type-badge">${typeCode}-${codeCM}</div>
+      <div class="type-sub">${typeInfo.name}</div>
+      <div class="type-desc">${typeInfo.desc}</div>
+      <div class="tags" style="margin-top:14px">
+        <span class="tag">${codeIP==='N'?'亲近端':'独立端'}</span>
+        <span class="tag">${codeRN==='S'?'安全感稳定':'确认需求较高'}</span>
+        <span class="tag">${codeRE==='E'?'表达充分':'表达内敛'}</span>
+        <span class="tag">沟通风格：${codeCM==='T'?'偏分析':'偏共感'}</span>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <h2>各维度得分</h2>
+      <div class="dim-scores">
+        ${dimDisplay.map(d => {
+          const pct = Math.round(d.score/d.max*100);
+          return `<div class="dim-card">
+            <h4>${d.name}</h4>
+            <div class="score-val">${d.score} / ${d.max}　·　${pct >= 60 ? d.high : pct <= 40 ? d.low : '中间区'}</div>
+            <div class="meter"><span style="width:${pct}%;background:${d.color}"></span></div>
+          </div>`;
+        }).join('')}
+        <div class="dim-card">
+          <h4>认知沟通模式</h4>
+          <div class="score-val">${scores.CM} / ${cmMax}　·　${codeCM==='T'?'偏分析型（T）':'偏共感型（F）'}</div>
+          <div class="meter"><span style="width:${Math.round(scores.CM/cmMax*100)}%;background:#b45309"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <h2>风险与提示</h2>
+      <div class="risk-section">
+        ${risks.map(r => `<div class="risk-item ${r.level}"><strong>${r.title}：${r.level==='high'?'需要关注':r.level==='mid'?'中等':'良好'}</strong><p>${r.desc}</p></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="result-card">
+      <h2>你的开放题回答</h2>
+      ${openAnswers.map(o => `<div style="margin-bottom:14px"><div style="font-size:12px;color:#999;margin-bottom:4px">${o.id}</div><div style="font-size:14px;color:#555;line-height:1.7;padding:10px 14px;background:#fafaf8;border-radius:10px">${o.val||'（未作答）'}</div></div>`).join('')}
+      <p style="font-size:12px;color:#bbb;margin-top:10px">开放题目前展示原文。如需 LLM 分析，可将报告文本提供给 AI 助手进行价值观匹配分析。</p>
+    </div>
+
+    <div class="result-card report-box">
+      <h2>文字报告</h2>
+      <textarea id="reportText" readonly>${generateReport(typeCode,codeCM,typeInfo,dimDisplay,scores,cmMax,risks,openAnswers)}</textarea>
+      <div class="actions-row">
+        <button class="btn btn-sec" onclick="copyReport()">复制报告</button>
+        <button class="btn btn-sec" onclick="restart()">重新测试</button>
+      </div>
+      <p style="font-size:12px;color:#bbb;margin-top:12px">你可以把这个 HTML 文件直接发给对方做测试，然后对比两人的结果。</p>
+    </div>
+  `;
+  rs.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function generateReport(code,cm,info,dims,scores,cmMax,risks,opens){
+  let r = [];
+  r.push('RMS 恋爱匹配筛选系统 · 测试结果');
+  r.push('═'.repeat(36));
+  r.push('');
+  r.push(`类型编码：${code}-${cm}`);
+  r.push(`类型名称：${info.name}`);
+  r.push(`类型描述：${info.desc}`);
+  r.push('');
+  r.push('── 各维度得分 ──');
+  dims.forEach(d => {
+    const pct = Math.round(d.score/d.max*100);
+    r.push(`${d.name}：${d.score}/${d.max}（${pct}%）→ ${pct>=60?d.high:pct<=40?d.low:'中间区'}`);
+  });
+  r.push(`认知沟通：${scores.CM}/${cmMax} → ${cm==='T'?'偏分析型':'偏共感型'}`);
+  r.push('');
+  r.push('── 风险提示 ──');
+  risks.forEach(ri => r.push(`${ri.title}：${ri.desc}`));
+  r.push('');
+  r.push('── 开放题回答 ──');
+  opens.forEach(o => { r.push(`[${o.id}]`); r.push(o.val||'（未作答）'); r.push(''); });
+  r.push('');
+  r.push('提示：这份结果适合做前筛和关系画像参考，不适合当作绝对判断。');
+  r.push('真正的关系质量，还是要看互动、边界、修复和长期行为。');
+  return r.join('\n');
+}
+
+function copyReport(){
+  const t = document.getElementById('reportText');
+  t.select();
+  try{ navigator.clipboard.writeText(t.value); alert('已复制到剪贴板'); }
+  catch(e){ alert('复制失败，请手动选择复制'); }
+}
+
+function restart(){
+  document.querySelectorAll('input[type="radio"]').forEach(i=>i.checked=false);
+  document.querySelectorAll('textarea').forEach(t=>t.value='');
+  document.getElementById('resultSection').classList.remove('active');
+  document.getElementById('resultSection').innerHTML='';
+  document.getElementById('introSection').style.display='block';
+  document.getElementById('progressWrap').style.display='none';
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Init
+buildSections();
+
+document.getElementById('startBtn').addEventListener('click',()=>{
+  document.getElementById('introSection').style.display='none';
+  document.getElementById('progressWrap').style.display='block';
+  goSection(0);
+});
+
+document.addEventListener('change', e => {
+  if(e.target.matches('input[type="radio"]')) updateProgress();
+});
+document.addEventListener('input', e => {
+  if(e.target.matches('textarea')) updateProgress();
+});
+</script>
+</body>
+</html>
