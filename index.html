@@ -66,10 +66,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 .scenario-opt input:checked + label{border-color:#2c2c2c;background:#f9f7f3;color:#2c2c2c;font-weight:600}
 .scenario-opt:hover label{border-color:#ccc}
 
-/* --- Open Question --- */
-.open-textarea{width:100%;min-height:120px;border:2px solid #eee;border-radius:14px;padding:14px 16px;font-size:14px;line-height:1.7;resize:vertical;background:#fafaf8;font-family:inherit;transition:.2s}
-.open-textarea:focus{outline:none;border-color:#2c2c2c}
-
 /* --- Nav --- */
 .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:12px}
 .nav-row .step-info{font-size:13px;color:#bbb}
@@ -131,8 +127,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
         <span class="tag">请按真实倾向作答</span>
         <span class="tag">结果仅供参考</span>
       </div>
-      <p style="font-size:13px;color:#999;margin-bottom:18px">共 42 道量表题 + 4 道开放题。量表题从「非常符合」到「非常不符合」五档选择，开放题自由作答。</p>
-      <button class="btn btn-main" id="startBtn">开始测试</button>
+      <p style="font-size:13px;color:#999;margin-bottom:18px">共 42 道量表题。从「非常符合」到「非常不符合」五档选择。</p>
+      <button class="btn btn-main" id="startBtn" type="button" onclick="startTest()">开始测试</button>
     </div>
   </div>
 
@@ -216,15 +212,6 @@ const sections = [
         optA:'先收集信息、对比选项、列出利弊',
         optB:'先聊「我们想要什么感觉」「我们最看重的是什么」'},
     ]
-  },
-  {
-    id:'sec6', title:'第六部分', desc:'开放题——用你自己的话自由回答，写多写少都可以',
-    questions:[
-      {id:'O1', text:'你理想中三到五年后的生活是什么样的？（可以聊工作、居住、节奏、家庭，随你展开）', dim:'OPEN', dir:'open'},
-      {id:'O2', text:'在一段亲密关系里，你最不能接受对方做的一件事是什么？为什么？', dim:'OPEN', dir:'open'},
-      {id:'O3', text:'如果你和伴侣在一个大事上意见完全相反（比如要不要小孩、去哪个城市生活），你会怎么处理？', dim:'OPEN', dir:'open'},
-      {id:'O4', text:'你觉得身体上的亲密（牵手、拥抱、亲密接触）在一段关系里有多重要？你理想的状态是什么样的？', dim:'OPEN', dir:'open'},
-    ]
   }
 ];
 
@@ -250,7 +237,7 @@ const dimMeta = {
 };
 
 let currentSection = 0;
-const totalScaleQ = sections.reduce((s,sec) => s + sec.questions.filter(q=>q.dir!=='open').length, 0);
+const totalScaleQ = sections.reduce((s,sec) => s + sec.questions.length, 0);
 
 function buildSections(){
   const wrap = document.getElementById('questionsWrap');
@@ -267,13 +254,7 @@ function buildSections(){
       globalQNum++;
       const qKey = `q_${q.id}`;
 
-      if(q.dir === 'open'){
-        html += `<div class="question">
-          <div class="q-num">Q${globalQNum}</div>
-          <div class="q-text">${q.text}</div>
-          <textarea class="open-textarea" name="${qKey}" placeholder="在这里写下你的想法……"></textarea>
-        </div>`;
-      } else if(q.dir === 'scenario'){
+      if(q.dir === 'scenario'){
         html += `<div class="question">
           <div class="q-num">Q${globalQNum}</div>
           <div class="scenario-wrap">
@@ -334,13 +315,8 @@ function isSectionDone(idx){
   const sec = sections[idx];
   for(const q of sec.questions){
     const qKey = `q_${q.id}`;
-    if(q.dir === 'open'){
-      const ta = document.querySelector(`textarea[name="${qKey}"]`);
-      if(!ta || !ta.value.trim()) return false;
-    } else {
-      const checked = document.querySelector(`input[name="${qKey}"]:checked`);
-      if(!checked) return false;
-    }
+    const checked = document.querySelector(`input[name="${qKey}"]:checked`);
+    if(!checked) return false;
   }
   return true;
 }
@@ -369,12 +345,7 @@ function updateProgress(){
   sections.forEach(sec => {
     sec.questions.forEach(q => {
       const qKey = `q_${q.id}`;
-      if(q.dir==='open'){
-        const ta = document.querySelector(`textarea[name="${qKey}"]`);
-        if(ta && ta.value.trim()) done++;
-      } else {
-        if(document.querySelector(`input[name="${qKey}"]:checked`)) done++;
-      }
+      if(document.querySelector(`input[name="${qKey}"]:checked`)) done++;
     });
   });
   const total = sections.reduce((s,sec)=>s+sec.questions.length,0);
@@ -403,7 +374,7 @@ function renderResults(){
 
   sections.forEach(sec => {
     sec.questions.forEach(q => {
-      if(q.dir==='open' || q.dir==='M') return;
+      if(q.dir==='M') return;
       const s = scoreQ(q.id, q.dir);
       if(scores[q.dim] !== undefined){
         scores[q.dim] += s;
@@ -473,13 +444,6 @@ function renderResults(){
     {key:'RE',name:'回应表达',score:scores.RE,max:reMax,color:'#16a34a',high:'表达充分',low:'表达内敛'},
   ];
 
-  // Open answers
-  const openAnswers = [];
-  ['O1','O2','O3','O4'].forEach(oid => {
-    const ta = document.querySelector(`textarea[name="q_${oid}"]`);
-    if(ta) openAnswers.push({id:oid, val:ta.value.trim()});
-  });
-
   // Build result HTML
   const rs = document.getElementById('resultSection');
   rs.innerHTML = `
@@ -522,15 +486,9 @@ function renderResults(){
       </div>
     </div>
 
-    <div class="result-card">
-      <h2>你的开放题回答</h2>
-      ${openAnswers.map(o => `<div style="margin-bottom:14px"><div style="font-size:12px;color:#999;margin-bottom:4px">${o.id}</div><div style="font-size:14px;color:#555;line-height:1.7;padding:10px 14px;background:#fafaf8;border-radius:10px">${o.val||'（未作答）'}</div></div>`).join('')}
-      <p style="font-size:12px;color:#bbb;margin-top:10px">开放题目前展示原文。如需 LLM 分析，可将报告文本提供给 AI 助手进行价值观匹配分析。</p>
-    </div>
-
     <div class="result-card report-box">
       <h2>文字报告</h2>
-      <textarea id="reportText" readonly>${generateReport(typeCode,codeCM,typeInfo,dimDisplay,scores,cmMax,risks,openAnswers)}</textarea>
+      <textarea id="reportText" readonly>${generateReport(typeCode,codeCM,typeInfo,dimDisplay,scores,cmMax,risks)}</textarea>
       <div class="actions-row">
         <button class="btn btn-sec" onclick="copyReport()">复制报告</button>
         <button class="btn btn-sec" onclick="restart()">重新测试</button>
@@ -542,7 +500,7 @@ function renderResults(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function generateReport(code,cm,info,dims,scores,cmMax,risks,opens){
+function generateReport(code,cm,info,dims,scores,cmMax,risks){
   let r = [];
   r.push('RMS 恋爱匹配筛选系统 · 测试结果');
   r.push('═'.repeat(36));
@@ -561,9 +519,6 @@ function generateReport(code,cm,info,dims,scores,cmMax,risks,opens){
   r.push('── 风险提示 ──');
   risks.forEach(ri => r.push(`${ri.title}：${ri.desc}`));
   r.push('');
-  r.push('── 开放题回答 ──');
-  opens.forEach(o => { r.push(`[${o.id}]`); r.push(o.val||'（未作答）'); r.push(''); });
-  r.push('');
   r.push('提示：这份结果适合做前筛和关系画像参考，不适合当作绝对判断。');
   r.push('真正的关系质量，还是要看互动、边界、修复和长期行为。');
   return r.join('\n');
@@ -578,7 +533,7 @@ function copyReport(){
 
 function restart(){
   document.querySelectorAll('input[type="radio"]').forEach(i=>i.checked=false);
-  document.querySelectorAll('textarea').forEach(t=>t.value='');
+  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
   document.getElementById('resultSection').classList.remove('active');
   document.getElementById('resultSection').innerHTML='';
   document.getElementById('introSection').style.display='block';
@@ -590,17 +545,14 @@ function restart(){
 // Init
 buildSections();
 
-document.getElementById('startBtn').addEventListener('click',()=>{
+function startTest(){
   document.getElementById('introSection').style.display='none';
   document.getElementById('progressWrap').style.display='block';
   goSection(0);
-});
+}
 
 document.addEventListener('change', e => {
   if(e.target.matches('input[type="radio"]')) updateProgress();
-});
-document.addEventListener('input', e => {
-  if(e.target.matches('textarea')) updateProgress();
 });
 </script>
 </body>
