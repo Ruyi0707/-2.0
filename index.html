@@ -3,14 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>RMS 恋爱匹配筛选测试</title>
+<title>RMS 恋爱匹配筛选系统</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#f4f1ec;color:#2c2c2c;line-height:1.6}
 .wrap{max-width:680px;margin:0 auto;padding:20px 16px 80px}
-.hero{background:#fff;border-radius:20px;padding:32px 28px;box-shadow:0 4px 20px rgba(0,0,0,.06);margin-bottom:20px}
-.hero h1{font-size:26px;font-weight:800;letter-spacing:1px;margin-bottom:8px}
+.hero{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.06);margin-bottom:20px}
+.hero-img-wrap{background:#f7f5f1;padding:18px 18px 0}
+.hero-img{display:block;width:100%;max-height:520px;object-fit:contain;border-radius:18px 18px 0 0}
+.hero-content{padding:26px 28px 30px}
+.hero h1{font-size:28px;font-weight:900;letter-spacing:1px;margin-bottom:8px}
 .hero p{font-size:14px;color:#666;margin-bottom:16px}
+.hero-main-copy{font-size:14px;color:#666;line-height:1.8;margin-bottom:16px}
 .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
 .tag{padding:5px 14px;border-radius:99px;background:#f4f1ec;font-size:12px;color:#666;font-weight:500}
 .btn{display:inline-block;padding:14px 32px;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
@@ -141,7 +145,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 .sr-report-text{position:absolute;left:-9999px;top:auto;width:1px;height:1px;opacity:0;pointer-events:none}
 .actions-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
 @media(max-width:600px){
-  .hero{padding:24px 18px}
+  .hero-content{padding:22px 18px 24px}
+  .hero-img-wrap{padding:12px 12px 0}
+  .hero-img{max-height:420px}
+  .hero h1{font-size:24px}
   .section{padding:22px 16px}
   .circle-group{gap:6px}
   .circles .side-label{min-width:36px;font-size:10px}
@@ -165,16 +172,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
   </div>
   <div id="introSection" class="active" style="display:block">
     <div class="hero">
-      <h1>RMS 恋爱匹配筛选系统</h1>
-      <p>这是一套用于前筛和关系画像的测试。它不是心理诊断工具，不能替代真实相处，但可以帮助你更快识别自己的关系模式，以及两个人之间的结构性兼容度。</p>
-      <div class="tags">
-        <span class="tag">约 10-15 分钟</span>
-        <span class="tag">没有对错之分</span>
-        <span class="tag">请按真实倾向作答</span>
-        <span class="tag">结果仅供参考</span>
+      <div class="hero-img-wrap">
+        <img class="hero-img" id="homeHeroImg" src="home-hero.png" alt="RMS 恋爱匹配筛选系统">
       </div>
-      <p style="font-size:13px;color:#999;margin-bottom:18px">共 42 道量表题。从「非常符合」到「非常不符合」五档选择。</p>
-      <button class="btn btn-main" id="startBtn" type="button" onclick="startTest()">开始测试</button>
+      <div class="hero-content">
+        <h1>RMS 恋爱匹配筛选系统</h1>
+        <p class="hero-main-copy">这是一套用于前筛和关系画像的测试。它不是心理诊断工具，不能替代真实相处，但可以帮助你更快识别自己的关系模式，以及两个人之间的结构性兼容度。</p>
+        <div class="tags">
+          <span class="tag">约 10-15 分钟</span>
+          <span class="tag">没有对错之分</span>
+          <span class="tag">请按真实倾向作答</span>
+          <span class="tag">结果仅供参考</span>
+        </div>
+        <p style="font-size:13px;color:#999;margin-bottom:18px">共 42 道量表题。从「非常符合」到「非常不符合」五档选择。</p>
+        <button class="btn btn-main" id="startBtn" type="button" onclick="startTest()">开始测试</button>
+      </div>
     </div>
   </div>
   <div id="questionsWrap"></div>
